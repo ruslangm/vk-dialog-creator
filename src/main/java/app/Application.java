@@ -1,0 +1,60 @@
+package app;
+
+import com.vk.api.sdk.client.VkApiClient;
+import com.vk.api.sdk.httpclient.HttpTransportClient;
+import org.apache.log4j.BasicConfigurator;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.server.handler.ResourceHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
+
+public class Application {
+
+    private static final Logger LOG = LoggerFactory.getLogger(Application.class);
+
+    public static void main(String[] args) throws Exception {
+        BasicConfigurator.configure();
+        Properties properties = loadConfiguration();
+        initServer(properties);
+    }
+
+    private static void initServer(Properties properties) throws Exception {
+        Integer port = Integer.valueOf(properties.getProperty("server.port"));
+
+        int clientId = Integer.valueOf(properties.getProperty("client.id"));
+        HandlerCollection handlers = new HandlerCollection();
+
+        ResourceHandler resourceHandler = new ResourceHandler();
+        resourceHandler.setDirectoriesListed(true);
+        resourceHandler.setWelcomeFiles(new String[]{"index.html"});
+        resourceHandler.setResourceBase(Application.class.getResource("/static").getPath());
+
+        VkApiClient vk = new VkApiClient(new HttpTransportClient());
+        handlers.setHandlers(new Handler[]{resourceHandler, new RequestHandler(vk, clientId)});
+
+        Server server = new Server(port);
+        server.setHandler(handlers);
+
+        server.start();
+        server.join();
+    }
+
+    private static Properties loadConfiguration() {
+        Properties properties = new Properties();
+        try (InputStream is = Application.class.getResourceAsStream("/config.properties")) {
+            properties.load(is);
+        } catch (IOException e) {
+            LOG.error("Can't load properties file", e);
+            throw new IllegalStateException(e);
+        }
+
+        return properties;
+    }
+
+}

@@ -59,12 +59,13 @@ public class RequestHandler extends AbstractHandler {
                 break;
             }
 
-            case "/send-message": {
+            case "/create-chat": {
                 try {
+                    String title = baseRequest.getParameter("title");
                     UserActor actor = new UserActor(userId, token);
                     Integer chatId = vk.messages()
                             .createChat(actor, userId)
-                            .title("charity")
+                            .title(title)
                             .execute();
                     int peerId = GROUP_PEER_ID + chatId;
                     String chatLink = vk.messages().getInviteLink(actor).peerId(peerId).execute().getLink();

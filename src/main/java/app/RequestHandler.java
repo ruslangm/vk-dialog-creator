@@ -59,9 +59,10 @@ public class RequestHandler extends AbstractHandler {
                 break;
             }
 
+
             case "/create-chat": {
                 try {
-                    String title = baseRequest.getParameter("title");
+                    String title = baseRequest.getParameter("name");
                     UserActor actor = new UserActor(userId, token);
                     Integer chatId = vk.messages()
                             .createChat(actor, userId)
